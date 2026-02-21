@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autonomous Cognitive Agent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Font Awesome for professional icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .sidebar-icon { width: 20px; text-align: center; }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="flex h-screen">
+        <!-- Professional Sidebar -->
+        <div class="w-80 bg-white shadow-xl flex flex-col border-r border-gray-200">
+            <div class="p-8 border-b border-gray-200">
+                <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-4">
+                    <i class="fas fa-robot text-blue-600 text-3xl"></i>
+                    Cognitive Agent
+                </h1>
+                <p class="text-sm text-gray-600 mt-2">Advanced Autonomous Research Assistant</p>
+            </div>
+
+            <!-- Tabs with Icons -->
+            <div class="flex flex-col">
+                <button onclick="switchTab('todos')" id="todosTab" 
+                        class="flex items-center gap-4 px-8 py-5 text-left font-medium text-blue-700 bg-blue-50 border-l-4 border-blue-600 transition-all">
+                    <i class="fas fa-tasks sidebar-icon"></i>
+                    Tasks
+                </button>
+                <button onclick="switchTab('files')" id="filesTab" 
+                        class="flex items-center gap-4 px-8 py-5 text-left font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-all">
+                    <i class="fas fa-folder-open sidebar-icon"></i>
+                    Files
+                </button>
+                <button onclick="switchTab('calendar')" id="calendarTab" 
+                        class="flex items-center gap-4 px-8 py-5 text-left font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-all">
+                    <i class="fas fa-calendar-alt sidebar-icon"></i>
+                    Events
+                </button>
+            </div>
+
+            <!-- Content Panels -->
+            <div class="flex-1 overflow-y-auto p-8 bg-gray-50">
+                <div id="todosPanel">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-6 flex items-center gap-3">
+                        <i class="fas fa-clipboard-list text-blue-600"></i>
+                        Active Tasks
+                    </h3>
+                    <div id="todosList" class="space-y-4">
+                        <p class="text-center text-gray-500 py-12 italic">No tasks created yet</p>
+                    </div>
+                </div>
+
+                <div id="filesPanel" class="hidden">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-6 flex items-center gap-3">
+                        <i class="fas fa-save text-green-600"></i>
+                        Virtual File System
+                    </h3>
+                    <div id="filesList" class="space-y-4">
+                        <p class="text-center text-gray-500 py-12 italic">No files saved</p>
+                    </div>
+                </div>
+
+                <div id="calendarPanel" class="hidden">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-6 flex items-center gap-3">
+                        <i class="fas fa-clock text-purple-600"></i>
+                        Scheduled Events
+                    </h3>
+                    <div id="calendarList" class="space-y-4">
+                        <p class="text-center text-gray-500 py-12 italic">No events scheduled</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="p-8 border-t border-gray-200 bg-white">
+                <div class="grid grid-cols-3 gap-6">
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-blue-600" id="todoCount">0</div>
+                        <p class="text-sm text-gray-600 mt-2">Tasks</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-green-600" id="fileCount">0</div>
+                        <p class="text-sm text-gray-600 mt-2">Files</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-purple-600" id="eventCount">0</div>
+                        <p class="text-sm text-gray-600 mt-2">Events</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Chat Area -->
+        <div class="flex-1 flex flex-col bg-white">
+            <div class="bg-white border-b border-gray-200 px-8 py-6 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900">Chat Interface</h2>
+                        <p class="text-sm text-gray-600 mt-1">Powered by LangGraph + Grok</p>
+                    </div>
+                    <button onclick="clearChat()" 
+                            class="px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
+                        Clear Conversation
+                    </button>
+                </div>
+            </div>
+
+            <div id="chatMessages" class="flex-1 overflow-y-auto p-8 space-y-8">
+                <div class="flex gap-5">
+                    <div class="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white text-xl flex-shrink-0 shadow-md">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="flex-1 bg-gray-50 rounded-2xl p-6 shadow-sm border border-gray-200 max-w-4xl">
+                        <h3 class="font-bold text-gray-900 text-lg mb-4">Autonomous Cognitive Agent</h3>
+                        <p class="text-gray-700 leading-relaxed mb-4">
+                            This is an advanced autonomous AI agent capable of:
+                        </p>
+                        <ul class="list-disc list-inside text-gray-700 space-y-2 ml-4 mb-6">
+                            <li>Task creation, management, and prioritization</li>
+                            <li>Calendar event scheduling with natural language</li>
+                            <li>File storage and retrieval in a virtual filesystem</li>
+                            <li>Long-term memory and context retention across sessions</li>
+                            <li>Tool execution with structured reasoning</li>
+                        </ul>
+                        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+                            <p class="font-semibold text-blue-900 mb-3">Example Commands:</p>
+                            <ul class="text-blue-800 space-y-2 text-sm">
+                                <li>• "Plan a research presentation for next Friday"</li>
+                                <li>• "Schedule a meeting with the team on Thursday at 11 AM"</li>
+                                <li>• "Save my notes on reinforcement learning"</li>
+                                <li>• "Export all current tasks to a file"</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-200 p-8 bg-gray-50">
+                <div class="max-w-5xl mx-auto">
+                    <div class="flex gap-5">
+                        <input type="text" 
+                               id="userInput" 
+                               placeholder="Enter your request here..." 
+                               class="flex-1 px-6 py-4 text-base border border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500 focus:border-blue-500 transition-shadow bg-white shadow-sm"
+                               onkeypress="if(event.key === 'Enter') sendMessage()">
+                        <button onclick="sendMessage()" 
+                                id="sendBtn"
+                                class="px-10 py-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all">
+                            Send Message
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- File Viewer Modal -->
+    <div id="fileModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-8 z-50">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[85vh] flex flex-col border border-gray-300">
+            <div class="flex items-center justify-between p-6 border-b border-gray-200">
+                <h3 class="text-xl font-bold text-gray-900" id="modalFileName">File Content</h3>
+                <button onclick="closeFileModal()" 
+                        class="text-gray-500 hover:text-gray-700 text-2xl w-10 h-10 rounded-full hover:bg-gray-100 transition">
+                    
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-8 bg-gray-900">
+                <pre id="modalFileContent" class="text-sm text-gray-300 whitespace-pre-wrap font-mono leading-relaxed"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
