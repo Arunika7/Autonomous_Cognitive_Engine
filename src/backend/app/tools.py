@@ -182,6 +182,12 @@ class ToolExecutor:
         filename = filename.replace("..", "").replace("/", "_").replace("\\", "_")
 
         state["files"][filename] = content
+        
+        try:
+            from backend.app.vector_store import ingest_document
+            ingest_document(filename, content)
+        except Exception as e:
+            pass
 
         return {
             "success": True,
@@ -470,6 +476,30 @@ class ToolExecutor:
             "summary": f"No matching event found for '{title_match or event_id}'"
         }
 
+
+    @staticmethod
+    def semantic_search(state: AgentState, query: str, k: int = 4, **kwargs) -> Dict[str, Any]:
+        """Search through all saved documents for semantically relevant information based on a query."""
+        try:
+            from backend.app.vector_store import search_documents
+            results = search_documents(query, k)
+            
+            if not results:
+                return {"success": False, "summary": "No relevant documents found in the Vector Store."}
+                
+            summary_parts = []
+            for i, res in enumerate(results, 1):
+                source = res["source"]
+                content = res["content"]
+                summary_parts.append(f"[Result {i} from {source}]:\n{content}")
+                
+            success_msg = f"Found {len(results)} relevant semantic results for query: '{query}'"
+            return {
+                "success": True,
+                "summary": success_msg + "\n\n" + "\n\n".join(summary_parts)
+            }
+        except Exception as e:
+            return {"success": False, "summary": f"Semantic search failed: {e}"}
 
 # For easier discovery / documentation
 AVAILABLE_TOOLS = {

@@ -29,24 +29,10 @@ logger = logging.getLogger(__name__)
 
 BASE_DIR = Path(__file__).resolve().parents[3]
 
-possible_env_paths = [
-    BASE_DIR / ".env",
-    Path.cwd() / ".env",
-    Path(__file__).parent.parent.parent / ".env",
-    Path(__file__).parent / ".env",
-]
+from backend.app.config import settings
 
-env_loaded = False
-for env_path in possible_env_paths:
-    if env_path.is_file():
-        load_dotenv(env_path)
-        env_loaded = True
-        logger.info(f"Loaded .env from: {env_path}")
-        break
-
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-if not GROQ_API_KEY:
-    raise ValueError("GROQ_API_KEY not found")
+if not settings.groq_api_key:
+    raise ValueError("GROQ_API_KEY not found in configuration")
 
 # Configuration
 MAX_HISTORY = 8
@@ -54,10 +40,10 @@ MAX_ITERATIONS = 12
 CURRENT_DATE = datetime.now().strftime("%Y-%m-%d")
 
 llm = ChatGroq(
-    model="llama-3.1-8b-instant",
+    model=settings.supervisor_model,
     temperature=0,
     max_tokens=300,
-    api_key=GROQ_API_KEY
+    api_key=settings.groq_api_key
 )
 
 class Decision(BaseModel):

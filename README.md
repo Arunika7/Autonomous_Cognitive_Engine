@@ -1,7 +1,7 @@
-#  Autonomous Cognitive Engine  (ACE)
+# Autonomous Cognitive Engine (ACE)
 **for Deep Research & Long-Horizon Tasks**
 
-> A stateful, governed, multi-agent AI system built with **LangGraph, FastAPI, and Groq LLMs** for executing complex, long-horizon tasks with memory, safety, and auditability.
+> A stateful, governed, multi-agent AI system built with **LangGraph, FastAPI, ChromaDB, and Groq LLMs** for executing complex, long-horizon tasks with memory, safety, and auditability.
 
 ---
 
@@ -12,10 +12,10 @@ The **Autonomous Cognitive Engine (ACE)** is an advanced AI agent platform desig
 It can:
 - Understand natural language
 - Plan multi-step workflows
-- Delegate work to specialized agents
-- Use tools safely
-- Store and retrieve long-term memory
-- Maintain a full audit trail of every decision
+- Delegate work to specialized tool-bound agents
+- Perform real-time live web searches
+- Store, embed, and retrieve long-term memory via Retrieval-Augmented Generation (RAG)
+- Maintain a full audit trail of every decision and securely gate API access
 
 ACE uses a **Supervisor-driven multi-agent architecture** that prevents hallucinations, enforces tool governance, and enables reliable, enterprise-grade AI automation.
 
@@ -26,11 +26,12 @@ ACE uses a **Supervisor-driven multi-agent architecture** that prevents hallucin
 | Normal AI Agents | ACE |
 |-----------------|-----|
 | One-shot reasoning | Long-horizon planning |
-| No memory | Persistent Virtual File System |
+| No memory | Persistent Virtual File System + ChromaDB Vector Storage |
 | Uncontrolled tool use | Strict Supervisor governance |
-| Hallucinations | Source-validated outputs |
+| Hallucinations | Source-validated live web outputs |
 | No audit trail | Full LangSmith tracing |
-| Monolithic | Specialized sub-agents |
+| Monolithic | Specialized sub-agents using native Tool Calling |
+| Insecure | Global API Key authentication via FastAPI Security |
 
 ---
 
@@ -39,17 +40,18 @@ ACE uses a **Supervisor-driven multi-agent architecture** that prevents hallucin
 ```
 User
 ↓
+FastAPI Security Layer (X-API-Key)
+↓
 Supervisor Agent (Control Plane)
-├── Web Search Agent
-├── Planning Agent
-├── Analyzer Agent
-├── Summarizer Agent
-├── Report Generator Agent
-├── Tool Executor (Calendar, Files, Search)
-└── Virtual File System (Persistent Memory)
+├── Web Search Agent (DuckDuckGo Live Search)
+├── Planning Agent (Task Generation Tool)
+├── Analyzer Agent (RAG / Semantic Search Tool)
+├── Summarizer Agent (File Reading Tool)
+├── Report Generator Agent (RAG / Reporting Tools)
+├── Tool Executor (Calendar, Files, Tasks)
+└── Virtual File System (Persistent Memory) <--> ChromaDB Vector Store
 ↓
 LangSmith (Tracing, Logging, Observability)
-
 ```
 
 Every action is routed through the **Supervisor**, ensuring deterministic, safe, and auditable execution.
@@ -58,168 +60,111 @@ Every action is routed through the **Supervisor**, ensuring deterministic, safe,
 
 ## 4. Sub-Agents
 
-###  Web Search Agent
-The only agent allowed to access the internet.
+All sub-agents have been structurally upgraded to natively use the **LangChain Tool Calling APIs** (`bind_tools`), giving them precise control over their assigned tasks.
 
-- Performs sandboxed web queries  
-- Returns structured, source-grounded data  
-- Cannot write to memory  
-
----
+### Web Search Agent
+- Performs live web queries to the real internet via `DuckDuckGoSearchRun`.
+- Returns structured, source-grounded data to absolutely prevent hallucination.
 
 ### Planning Agent
-Responsible for breaking complex user requests into executable steps.
-
-- Creates multi-step plans  
-- Assigns tasks to other agents  
-- Enforces execution order  
-
----
+- Breaks complex user requests into executable steps.
+- Autonomously injects workflows back into the state via the `create_multiple_todos` tool.
 
 ### Analyzer Agent
-Processes and reasons over collected data.
+- Processes and reasons over collected data.
+- Capable of querying massive historical document sets natively using the `semantic_search` tool (Vector RAG).
 
-- Validates facts  
-- Detects inconsistencies  
-- Performs structured reasoning  
-- Prepares data for reporting  
+### Summarizer Agent
+- Compresses large content into useful knowledge.
+- Ingests specific files via the `read_file` tool to summarize.
 
----
-
-###  Summarizer Agent
-Compresses large content into useful knowledge.
-
-- Produces TL;DRs  
-- Bullet-point summaries  
-- Section-wise condensation  
+### Report Generator Agent
+- Creates well-structured markdown outputs.
+- Can fetch and combine documents autonomously using Vector semantic retrieval or direct file reads.
 
 ---
 
-###  Report Generator Agent
-Creates final human-readable outputs.
+## 5. Supervisor Agent & Configuration
 
-- Generates reports  
-- Formats findings  
-- Produces structured documents  
-
----
-
-## 5. Supervisor Agent
-
-The **Supervisor** is the brain of ACE.
+The **Supervisor** is the brain of ACE. It relies on a central **Pydantic configuration manager** (`config.py`) to keep API keys and models hidden securely. 
 
 It:
 - Interprets user intent  
 - Selects which sub-agent or tool to use  
 - Enforces single-tool-per-turn policy  
 - Validates every output  
-- Writes approved results to the Virtual File System  
 - Logs all activity to LangSmith  
 
 ---
 
-## 6. Virtual File System (VFS)
+## 6. Virtual File System & Vector Storage
 
-A persistent, auditable external memory for ACE.
+A persistent, auditable external memory for ACE built on local disks combined with **ChromaDB**.
 
-Stores:
-- Research results  
-- Notes  
-- JSON  
-- CSV  
-- Reports  
-- Logs  
-
-Includes:
-- Versioning  
-- Metadata  
-- Provenance  
-- Full audit trails  
+When the system writes a file:
+- It saves to standard JSON/Markdown.
+- It immediately chunk-embeds the document seamlessly using `sentence-transformers` (`all-MiniLM-L6-v2`) and ingests it into a local ChromaDB Vector Store.
+- Allows agents to query massive historical data intelligently over time.
 
 ---
 
 ## 7. Tech Stack
 
-- **Backend**: FastAPI (Python)
-- **Agent Framework**: LangGraph
-- **LLM**: Groq (llama-3.3-70b-versatile)
-- **Memory**: Custom Virtual File System
+- **Backend / API**: FastAPI (Python), `pydantic-settings`
+- **Agent Framework**: LangGraph, LangChain Function Calling
+- **LLM**: Groq (`llama-3.1-8b-instant` for Supervisor, `llama-3.3-70b-versatile` for Sub-Agents)
+- **Vector Database**: ChromaDB (`langchain-chroma`)
+- **Embeddings Model**: local `sentence-transformers`
 - **Observability**: LangSmith
-- **Configuration**: YAML
-- **Environment**: dotenv
 
 ---
 
-## 8. Project Structure
+## 8. Security
 
-```
-src/
-├── backend/
-│   └── app/
-│       ├── agent_core.py      ← Core reasoning + state graph (LangGraph)
-│       ├── agent.py           ← Supervisor Agent (decision maker)
-│       ├── sub_agents.py      ← 5 Sub-Agents (websearch, planner, analyzer, summarizer, report)
-│       ├── tool_executor.py  ← Tool-gating + safe execution layer
-│       ├── tools.py          ← Actual tool implementations (calendar, files, web, etc.)
-│       ├── utils.py          ← State model, prompts, helper functions
-│       └── main.py           ← FastAPI server + API routes
-│
-├── tests/
-│   └── test_delegation.py    ← Verifies correct agent → tool delegation
-│
-├── frontend/
-│   ├── index.html            ← Chat UI
-│   ├── script.js             ← Frontend → backend API logic
-│   └── styles.css            ← UI styling
-│
-├── .env                     ← API keys (Groq, LangSmith, etc.)
-├── requirements.txt
-├── README.md
-└── LICENSE
+ACE is designed for enterprise deployment. The entire FastAPI backend is protected by a global `APIKeyHeader` dependency.
 
+Any request hitting the `/chat`, `/session`, or `/debug` endpoints *must* include the validation key via headers:
+```http
+X-API-Key: your-secure-api-key
 ```
+Unauthenticated requests receive an immediate `401 Unauthorized` block.
 
 ---
 
 ## 9. Setup
 
-```
+```bash
 git clone <repo-url>
 cd Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks
 git checkout intern-arunika
 
 python -m venv .venv
-source .venv/bin/activate
+# Activate environment:
+# source .venv/bin/activate (Linux/Mac) or .venv\Scripts\activate (Windows)
 pip install -r requirements.txt
-
 ```
 
-Create `.env`:
+Create a `.env` file in the root directory:
 
-```
+```env
 GROQ_API_KEY=your_groq_key
 LANGSMITH_KEY=your_langsmith_key
+API_AUTH_KEY=your_secure_backend_password
+```
 
+Run the server with:
+```bash
+python -m backend.app.main
 ```
 
 ---
 
-## 11. Why This Matters
+## 10. Why This Matters
 
 ACE is not a chatbot — it is a **governed autonomous reasoning system**.
 
 It enables:
-- Research automation  
-- Strategy planning  
-- Knowledge synthesis  
-- Enterprise-grade AI workflows  
-
----
-
-
-
-
-
-
-
-
+- Research automation with live web data
+- Strategy planning and execution loops
+- Vector-backed Knowledge synthesis
+- Secure, Enterprise-grade AI workflows

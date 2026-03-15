@@ -4,7 +4,8 @@ import json
 from datetime import datetime
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, Security
+from fastapi.security.api_key import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -12,6 +13,7 @@ from langchain_core.messages import HumanMessage, AIMessage
 
 from backend.app.agent import agent
 from backend.app.utils import AgentState
+from backend.app.config import settings
 
 # Configure logging
 logging.basicConfig(
@@ -20,11 +22,22 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=True)
+
+async def get_api_key(api_key: str = Security(api_key_header)):
+    if api_key != settings.api_auth_key:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or missing X-API-Key header"
+        )
+    return api_key
+
 # Initialize FastAPI app
 app = FastAPI(
     title="Autonomous Cognitive Engine API",
     description="Deep research and long-horizon task execution agent",
-    version="1.0.0"
+    version="1.0.0",
+    dependencies=[Depends(get_api_key)]
 )
 
 # CORS middleware for frontend communication

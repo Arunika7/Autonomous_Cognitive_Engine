@@ -18,7 +18,10 @@ async function sendMessage() {
     try {
         const response = await fetch(`${API_URL}/chat`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-API-Key': 'default-secret-key-change-in-production'
+            },
             body: JSON.stringify({
                 session_id: session_id,
                 message: message

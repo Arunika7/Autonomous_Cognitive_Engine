@@ -8,3 +8,6 @@ __pycache__/
 
 # OS files
 .DS_Store
+
+# Local Data (Vector DB & Sessions)
+data/
